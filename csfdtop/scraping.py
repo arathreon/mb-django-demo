@@ -171,6 +171,7 @@ async def fetch_film_actors(
     domain_url: str,
     film: BasicFilmInfo,
 ):
+    """Get actors from the film page"""
     async with semaphore:
         try:
             async with session.get(urljoin(domain_url, film.link)) as response:
@@ -183,6 +184,7 @@ async def fetch_film_actors(
                 heading_element = soup.find("h4", string="Hrají:")
                 if heading_element is None:
                     logger.info(f"Film {film.name} does not have any actors")
+                    # Films may not have actors, and that results in the section not being there (e.g. Krteček)
                     return film, []
                 actor_elements = heading_element.find_parent("div").find_all("a")
                 actors = [
