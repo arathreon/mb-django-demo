@@ -15,7 +15,7 @@ from django.db import transaction
 from requests import Session
 
 from csfdtop.models import Film, Actor
-from csfdtop.utils import get_name_year_hash
+from csfdtop.utils import get_name_year_hash, normalize_text
 
 logger = logging.getLogger(__name__)
 
@@ -178,19 +178,23 @@ async def fetch_film_actors(
                     logger.error(
                         f"Error while fetching film details: {response.status}"
                     )
-                    return film, []
+                    return None
                 soup = BeautifulSoup(await response.text(), "html.parser")
                 heading_element = soup.find("h4", string="Hrají:")
                 if heading_element is None:
-                    logger.error(f"Film {film.name} does not have any actors")
+                    logger.info(f"Film {film.name} does not have any actors")
                     return film, []
                 actor_elements = heading_element.find_parent("div").find_all("a")
-                actors = [actor_element.get_text() for actor_element in actor_elements]
+                actors = [
+                    actor_element.get_text()
+                    for actor_element in actor_elements
+                    if "more" not in actor_element.get("class", [])
+                ]
                 logger.info(f"Film {film.name} has {len(actors)} actors")
                 return film, actors
         except ClientConnectorError:
             logger.exception("Error while fetching film actors")
-            return film, []
+            return None
 
 
 async def get_actors(
@@ -208,9 +212,20 @@ async def get_actors(
         return await asyncio.gather(*tasks)
 
 
+def create_actor_and_add_normalized_name(actor_name: str) -> Actor:
+    """
+    Create an Actor object and add normalized name.
+
+    This is because bulk_create() does not support running save() in models.
+    """
+    actor = Actor(name=actor_name)
+    actor.name_normalized = normalize_text(actor_name)
+    return actor
+
+
 def save_results(results: list[tuple[BasicFilmInfo, list[str]]]):
     # Filter out films without actors because they failed to scrape
-    clean_results = list(filter(lambda x: x[1], results))
+    clean_results = list(filter(lambda x: x is not None, results))
 
     if not clean_results:
         logger.info("No films found with actors")
@@ -223,7 +238,9 @@ def save_results(results: list[tuple[BasicFilmInfo, list[str]]]):
         "name", flat=True
     )
     new_actors = all_actor_names - set(existing_actors)
-    Actor.objects.bulk_create([Actor(name=actor_name) for actor_name in new_actors])
+    Actor.objects.bulk_create(
+        [create_actor_and_add_normalized_name(actor_name) for actor_name in new_actors]
+    )
     actor_map = Actor.objects.filter(name__in=all_actor_names).in_bulk(
         field_name="name"
     )
@@ -235,7 +252,6 @@ def save_results(results: list[tuple[BasicFilmInfo, list[str]]]):
                 year=film_info.year,
             )
 
-            # 4. Set M2M
             actors = [actor_map[name] for name in actor_names if name in actor_map]
             film.actors.set(actors)
 

@@ -11,7 +11,7 @@
         {% for actor in film.actors.all %}
             <li><a href="{% url 'actor_detail' actor.id %}">{{ actor.name }}</a></li>
         {% empty %}
-            <li>No actors found for this film.</li>
+            <li>Nebyli naleženi žádní herci.</li>
         {% endfor %}
     </ul>
     <p><a href="{% url 'index' %}">Zpět na vyhledávání</a></p>

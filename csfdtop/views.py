@@ -30,10 +30,10 @@ def search_view(request):
 
 
 def film_detail(request, film_id):
-    film = get_object_or_404(Film, id=film_id)
+    film = get_object_or_404(Film.objects.prefetch_related("actors"), id=film_id)
     return render(request, "csfdtop/film_detail.html", {"film": film})
 
 
 def actor_detail(request, actor_id):
-    actor = get_object_or_404(Actor, id=actor_id)
+    actor = get_object_or_404(Actor.objects.prefetch_related("films"), id=actor_id)
     return render(request, "csfdtop/actor_detail.html", {"actor": actor})
