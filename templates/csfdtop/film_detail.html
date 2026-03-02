@@ -1,0 +1,19 @@
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ film.name }}</title>
+</head>
+<body>
+    <h1>{{ film.name }} ({{ film.year }})</h1>
+    <h2>Herci</h2>
+    <ul>
+        {% for actor in film.actors.all %}
+            <li><a href="{% url 'actor_detail' actor.id %}">{{ actor.name }}</a></li>
+        {% empty %}
+            <li>No actors found for this film.</li>
+        {% endfor %}
+    </ul>
+    <p><a href="{% url 'index' %}">Zpět na vyhledávání</a></p>
+</body>
+</html>

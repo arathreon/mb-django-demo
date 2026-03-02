@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from .models import Film, Actor
 from .utils import normalize_text
@@ -27,3 +27,13 @@ def search_view(request):
         return JsonResponse({"actors": actor_results, "films": film_results})
 
     return render(request, "csfdtop/index.html")
+
+
+def film_detail(request, film_id):
+    film = get_object_or_404(Film, id=film_id)
+    return render(request, "csfdtop/film_detail.html", {"film": film})
+
+
+def actor_detail(request, actor_id):
+    actor = get_object_or_404(Actor, id=actor_id)
+    return render(request, "csfdtop/actor_detail.html", {"actor": actor})

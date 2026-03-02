@@ -18,9 +18,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from csfdtop.views import search_view
+from csfdtop.views import search_view, film_detail, actor_detail
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", search_view, name="index"),
+    path("film/<int:film_id>/", film_detail, name="film_detail"),
+    path("actor/<int:actor_id>/", actor_detail, name="actor_detail"),
 ]
