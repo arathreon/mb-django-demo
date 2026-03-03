@@ -8,7 +8,7 @@ in the terminal:
 uv sync
 ```
 
-## Usagge
+## Usage
 ### Obtaining data
 To obtain the data, you need to run the command for getting data from the CSFD page. The command is invoked
 from the repository root via
