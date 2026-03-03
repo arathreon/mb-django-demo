@@ -29,6 +29,10 @@ YEAR_GROUP_NAME = "year"
 YEAR_RE = re.compile(rf".*(?P<{YEAR_GROUP_NAME}>\d{{4}}).*")
 
 
+class ScrapingError(Exception):
+    pass
+
+
 class BasicFilmInfo(NamedTuple):
     name: str
     year: int
@@ -36,10 +40,6 @@ class BasicFilmInfo(NamedTuple):
 
     def get_name_year_hash(self):
         return get_name_year_hash(self.name, self.year)
-
-
-class ScrapingError(Exception):
-    pass
 
 
 def get_page_content(request_session: Session, url: str) -> BeautifulSoup:
