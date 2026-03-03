@@ -8,6 +8,8 @@ in the terminal:
 uv sync
 ```
 
+Once you install the dependencies, you need to create a `.env` file based on the `.env.example`. The app won't run without it.
+
 ## Usage
 ### Obtaining data
 To obtain the data, you need to run the command for getting data from the CSFD page. The command is invoked
