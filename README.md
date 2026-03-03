@@ -33,3 +33,9 @@ This starts the *development* server on port `80000`.
 > The development server is not suitable for production use.
 
 
+### Running tests
+To run the tests, you need to run the following command from the repository root:
+
+```bash
+pytest
+```
