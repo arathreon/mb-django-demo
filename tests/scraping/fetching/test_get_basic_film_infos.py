@@ -67,7 +67,7 @@ def test_get_basic_film_infos_multiple_pages(mock_get_pagination, mock_process_t
         assert result[10 + i] == films_page2[i]
 
     assert mock_process_toplist_url.call_count == 2
-    mock_get_pagination.assert_called_once_with(soup_page1)
+    mock_get_pagination.assert_called_once_with(soup_page1, "/top")
 
 
 @patch("csfdtop.scraping.fetching.process_toplist_url")
