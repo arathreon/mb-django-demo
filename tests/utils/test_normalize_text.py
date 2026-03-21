@@ -8,6 +8,10 @@ from csfdtop.utils import normalize_text
     [
         ("Český film", "cesky film"),
         ("", ""),
+        (" ", " "),
+        (None, ""),
+        ("matrix", "matrix"),
+        ("naïve", "naive"),
     ],
 )
 def test_normalize_text(test_text, expected_result):

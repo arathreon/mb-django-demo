@@ -5,28 +5,22 @@ from .utils import normalize_text
 
 
 def search_view(request):
-    query = request.GET.get("q", "")
-
-    actor_results = []
-    film_results = []
-
-    if query:
-        normalized_query = normalize_text(query)
-
-        # Search Actors
-        actors = Actor.objects.filter(name_normalized__contains=normalized_query)
-        for actor in actors:
-            actor_results.append({"name": actor.name, "id": actor.id})
-
-        # Search Films
-        films = Film.objects.filter(name_normalized__contains=normalized_query)
-        for film in films:
-            film_results.append({"name": film.name, "id": film.id, "year": film.year})
-
-    if request.headers.get("x-requested-with") == "XMLHttpRequest":
-        return JsonResponse({"actors": actor_results, "films": film_results})
-
     return render(request, "csfdtop/index.html")
+
+
+def search_api(request):
+    query = request.GET.get("q", "").strip()
+    if not query or len(query) < 3:
+        return JsonResponse({"actors": [], "films": []})
+
+    normalized_query = normalize_text(query)
+
+    actor_results = list(Actor.objects.filter(name_normalized__contains=normalized_query).values("id", "name")[:50])
+    film_results = list(
+        Film.objects.filter(name_normalized__contains=normalized_query).values("name", "id", "year")[:50]
+    )
+
+    return JsonResponse({"actors": actor_results, "films": film_results})
 
 
 def film_detail(request, film_id):

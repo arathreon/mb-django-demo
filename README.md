@@ -29,7 +29,7 @@ To run the application, you need to run the command for starting the server
 python manage.py runserver 8000
 ```
 
-This starts the *development* server on port `80000`.
+This starts the *development* server on port `8000`.
 
 > [!NOTE]
 > The development server is not suitable for production use.

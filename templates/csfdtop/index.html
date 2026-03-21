@@ -1,138 +1,141 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Search</title>
-    <style>
-        body {
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Center horizontally */
-            min-height: 100vh;
-            margin: 0;
-            font-family: sans-serif;
-        }
-        h1 {
-            margin-bottom: 20px;
-        }
-        #search-box {
-            padding: 10px;
-            font-size: 16px;
-            width: 300px;
-            margin-bottom: 20px;
-        }
-        #results-container {
-            display: flex;
-            width: 90%;
-            gap: 20px; /* Space between columns */
-            align-items: flex-start;
-        }
-        .column {
-            flex: 1;
-            border: 5px solid #000;
-            padding: 5px;
-        }
-        .column h2 {
-            text-align: center;
-            border-bottom: 1px solid #000;
-        }
-        .result-item {
-            padding: 5px 0;
-            border-bottom: 1px solid #eee;
-        }
-        .result-item:last-child {
-            border-bottom: none;
-        }
-    </style>
-</head>
-<body>
-    <h1>Hledej filmy a herce</h1>
-    <input type="text" id="search-box" placeholder="Začni psát (např. Pán Prstenů)...">
+{% extends "csfdtop/base.html" %}
 
-    <div id="results-container" style="display: none;">
-        <div class="column" id="films-column">
-            <h2>Filmy</h2>
-            <div id="films-list"></div>
-        </div>
-        <div class="column" id="actors-column">
-            <h2>Herci</h2>
-            <div id="actors-list"></div>
-        </div>
+{% block title %}Vyhledávání{% endblock %}
+
+{% block extra_styles %}
+<style>
+    h1 {
+        margin-bottom: 20px;
+    }
+    #search-box {
+        padding: 10px;
+        font-size: 16px;
+        width: 300px;
+        margin-bottom: 20px;
+    }
+    #results-container {
+        display: flex;
+        width: 90%;
+        gap: 20px; /* Space between columns */
+        align-items: flex-start;
+    }
+    .column {
+        flex: 1;
+        border: 5px solid #000;
+        padding: 5px;
+    }
+    .column h2 {
+        text-align: center;
+        border-bottom: 1px solid #000;
+    }
+    .result-item {
+        padding: 5px 0;
+        border-bottom: 1px solid #eee;
+    }
+    .result-item:last-child {
+        border-bottom: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1>Hledej filmy a herce</h1>
+<input type="text" id="search-box" placeholder="Začni psát (např. Pán Prstenů)...">
+
+<div id="results-container" style="display: none;">
+    <div class="column" id="films-column">
+        <h2>Filmy</h2>
+        <div id="films-list"></div>
     </div>
+    <div class="column" id="actors-column">
+        <h2>Herci</h2>
+        <div id="actors-list"></div>
+    </div>
+</div>
+{% endblock %}
 
-    <script>
-        const searchBox = document.getElementById('search-box');
-        const resultsContainer = document.getElementById('results-container');
-        const filmsList = document.getElementById('films-list');
-        const actorsList = document.getElementById('actors-list');
-        let timeout = null;
+{% block scripts %}
+<script>
+    const searchBox = document.getElementById('search-box');
+    const filmsList = document.getElementById('films-list');
+    const actorsList = document.getElementById('actors-list');
+    let timeout = null;
 
-        searchBox.addEventListener('input', function() {
-            clearTimeout(timeout);
-            const query = this.value;
+    searchBox.addEventListener('input', function() {
+        clearTimeout(timeout);
+        const query = this.value;
 
-            timeout = setTimeout(() => {
-                const resultsContainer = document.getElementById('results-container');
-                if (query.length > 2) {
-                    fetch(`/?q=${encodeURIComponent(query)}`, {
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest'
-                        }
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        // Clear previous results
-                        filmsList.innerHTML = '';
-                        actorsList.innerHTML = '';
-
-                        let hasFilms = false;
-                        let hasActors = false;
-
-                        data["actors"]?.forEach(actor => {
-                            const div = document.createElement('div');
-                            div.className = 'result-item';
-                            const a = document.createElement('a');
-                            a.href = `/actor/${actor.id}`;
-                            a.textContent = actor.name;
-                            div.appendChild(a);
-                            actorsList.appendChild(div);
-                            hasActors = true;
-                        });
-
-                        if (!hasActors) {
-                            const div = document.createElement('div');
-                            div.className = 'result-item';
-                            div.textContent = "Žádní herci nenalezeni";
-                            actorsList.appendChild(div);
-                        }
-
-                        data["films"]?.forEach(film => {
-                            const div = document.createElement('div');
-                            div.className = 'result-item';
-                            const a = document.createElement('a');
-                            a.href = `/film/${film.id}`;
-                            a.textContent = `${film.name} (${film.year})`;
-                            div.appendChild(a);
-                            filmsList.appendChild(div);
-                            hasFilms = true;
-                        })
-
-                        if (!hasFilms) {
-                            const div = document.createElement('div');
-                            div.className = 'result-item';
-                            div.textContent = "Žádné filmy nenalezeny";
-                            filmsList.appendChild(div);
-                        }
-
-
-                     resultsContainer.style.display = 'flex';
-                    });
-                } else if (query.length === 0) {
-                    resultsContainer.style.display = 'none';
+        timeout = setTimeout(() => {
+            const resultsContainer = document.getElementById('results-container');
+            if (query.length > 2) {
+                fetch(`/api/search/?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Clear previous results
                     filmsList.innerHTML = '';
                     actorsList.innerHTML = '';
-                }
-            }, 300); // 300ms debounce
-        });
-    </script>
-</body>
-</html>
+
+                    let hasFilms = false;
+                    let hasActors = false;
+
+                    data["actors"]?.forEach(actor => {
+                        const div = document.createElement('div');
+                        div.className = 'result-item';
+                        const a = document.createElement('a');
+                        a.href = `/actor/${actor.id}`;
+                        a.textContent = actor.name;
+                        div.appendChild(a);
+                        actorsList.appendChild(div);
+                        hasActors = true;
+                    });
+
+                    if (!hasActors) {
+                        const div = document.createElement('div');
+                        div.className = 'result-item';
+                        div.textContent = "Žádní herci nenalezeni";
+                        actorsList.appendChild(div);
+                    }
+
+                    data["films"]?.forEach(film => {
+                        const div = document.createElement('div');
+                        div.className = 'result-item';
+                        const a = document.createElement('a');
+                        a.href = `/film/${film.id}`;
+                        a.textContent = `${film.name} (${film.year})`;
+                        div.appendChild(a);
+                        filmsList.appendChild(div);
+                        hasFilms = true;
+                    })
+
+                    if (!hasFilms) {
+                        const div = document.createElement('div');
+                        div.className = 'result-item';
+                        div.textContent = "Žádné filmy nenalezeny";
+                        filmsList.appendChild(div);
+                    }
+                })
+                .catch(e => {
+                    // Clear previous results
+                    filmsList.innerHTML = '';
+                    actorsList.innerHTML = '';
+
+                    const filmDiv = document.createElement('div');
+                    filmDiv.textContent = "Při komunikaci se serverem došlo k chybě";
+                    filmsList.append(filmDiv)
+
+                    const actorDiv = document.createElement('div');
+                    actorDiv.textContent = "Při komunikaci se serverem došlo k chybě";
+                    actorsList.append(actorDiv)
+                })
+                .finally(() => {
+                    resultsContainer.style.display = 'flex';
+                });
+            } else if (query.length === 0) {
+                resultsContainer.style.display = 'none';
+                filmsList.innerHTML = '';
+                actorsList.innerHTML = '';
+            }
+        }, 300); // 300ms debounce
+    });
+</script>
+{% endblock %}

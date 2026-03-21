@@ -30,11 +30,12 @@ SECRET_KEY = os.environ["SECRET_KEY"]
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "").split(",") if not DEBUG else []
 
 DOMAIN_URL = os.environ["DOMAIN_URL"]
 TOPLIST_URL_PART = os.environ["TOPLIST_URL_PART"]
 TOTAL_FILM_COUNT = int(os.environ.get("FILM_COUNT", 300))
+SCRAPING_MAX_CONCURRENT_REQUESTS = int(os.environ.get("SCRAPING_MAX_CONCURRENT_REQUESTS", 20))
 
 # Application definition
 

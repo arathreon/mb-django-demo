@@ -1,6 +1,9 @@
 import pytest
 from bs4 import BeautifulSoup
-from csfdtop.scraping import get_pagination
+from csfdtop.scraping.parsing import get_pagination
+
+
+BASE_URL = "/zebricky/filmy/nejlepsi/"
 
 
 def test_get_pagination_success():
@@ -12,7 +15,7 @@ def test_get_pagination_success():
     </div>
     """
     soup = BeautifulSoup(html, "html.parser")
-    result = get_pagination(soup)
+    result = get_pagination(soup, BASE_URL)
 
     assert len(result) == 2
     assert result[0] == (100, "/zebricky/filmy/nejlepsi/?from=100")
@@ -22,7 +25,7 @@ def test_get_pagination_success():
 def test_get_pagination_empty():
     html = "<div>No pagination here</div>"
     soup = BeautifulSoup(html, "html.parser")
-    result = get_pagination(soup)
+    result = get_pagination(soup, BASE_URL)
     assert result == []
 
 
@@ -34,4 +37,4 @@ def test_get_pagination_invalid_text():
     """
     soup = BeautifulSoup(html, "html.parser")
     with pytest.raises(ValueError):
-        get_pagination(soup)
+        get_pagination(soup, BASE_URL)

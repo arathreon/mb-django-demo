@@ -1,6 +1,6 @@
 import pytest
 from bs4 import BeautifulSoup
-from csfdtop.scraping import get_film_basic_info, BasicFilmInfo, ScrapingError
+from csfdtop.scraping.parsing import get_film_basic_info, BasicFilmInfo, ScrapingError
 
 
 def test_get_film_basic_info_success():
@@ -13,6 +13,7 @@ def test_get_film_basic_info_success():
     soup = BeautifulSoup(html_content, "html.parser")
     result = get_film_basic_info(soup)
 
+    assert result.csfd_id == 123
     assert result.name == "Matrix"
     assert result.year == 1999
     assert result.link == "/film/123-matrix"
@@ -29,6 +30,19 @@ def test_get_film_basic_info_missing_elements():
     soup = BeautifulSoup(html_content, "html.parser")
 
     with pytest.raises(ScrapingError, match="The film tag has incorrect format:"):
+        get_film_basic_info(soup)
+
+
+def test_get_film_basic_info_no_csfd_id():
+    html_content = """
+    <div class="film-item">
+        <a class="film-title-name" href="/film/matrix" title="Matrix">Matrix</a>
+        <span class="info">(1999)</span>
+    </div>
+    """
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    with pytest.raises(ScrapingError, match="Cannot find CSFD ID in the film link for:"):
         get_film_basic_info(soup)
 
 
