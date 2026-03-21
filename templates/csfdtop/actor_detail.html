@@ -1,19 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{{ actor.name }}</title>
-</head>
-<body>
+{% extends "csfdtop/base.html" %}
+
+{% block title %}{{ actor.name }}{% endblock %}
+
+{% block content %}
     <h1>{{ actor.name }}</h1>
     <h2>Filmografie</h2>
     <ul>
         {% for film in actor.films.all %}
-            <li><a href="{% url 'film_detail' film.id %}">{{ film.name }} ({{ film.year }})</a></li>
+            <li><a href="{% url 'csfdtop:film_detail' film.id %}">{{ film.name }} ({{ film.year }})</a></li>
         {% empty %}
              <li>Nebyly nalezené žádné filmy.</li>
         {% endfor %}
     </ul>
-    <p><a href="{% url 'index' %}">Zpět na vyhledávání</a></p>
-</body>
-</html>
+    <p><a href="{% url 'csfdtop:index' %}">Zpět na vyhledávání</a></p>
+{% endblock %}

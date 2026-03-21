@@ -1,23 +1,40 @@
 [project]
 name = "mb-django-demo"
 version = "0.1.0"
-description = "Add your description here"
+description = "A simple Django app"
 requires-python = ">=3.14"
 dependencies = [
-    "aiohttp>=3.13.3",
     "beautifulsoup4>=4.14.3",
-    "django>=6.0.2",
-    "python-dotenv>=1.2.1",
-    "requests>=2.32.5",
+    "django>=6.0.3",
+    "playwright>=1.58.0",
+    "python-dotenv>=1.2.2",
 ]
 
 [dependency-groups]
 dev = [
+    "django-stubs>=6.0.1",
+    "mypy>=1.19.1",
     "pytest>=9.0.2",
+    "pytest-asyncio>=1.3.0",
     "pytest-django>=4.12.0",
-    "ruff>=0.15.4",
+    "ruff>=0.15.7",
 ]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "mb_django_demo.settings"
-python_files = ["tests/*/test_*.py"]
+testpaths = ["tests/"]
+asyncio_mode = "strict"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+extend-select = ["G004"]
+
+[tool.django-stubs]
+django_settings_module = "mb_django_demo.settings"
+
+[tool.mypy]
+check_untyped_defs = true
+plugins = ["mypy_django_plugin.main"]
+exclude = ["csfdtop/migrations/", "tests/"]

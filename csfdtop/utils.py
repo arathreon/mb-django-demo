@@ -1,13 +1,7 @@
-import hashlib
 import unicodedata
 
 
-def get_name_year_hash(name, year):
-    """Hashes the name and year to create a unique identifier"""
-    return hashlib.sha256(f"{name}{year}".encode()).hexdigest()
-
-
-def normalize_text(text):
+def normalize_text(text: str) -> str:
     """Removes diacritics and converts to lowercase"""
     if not text:
         return ""

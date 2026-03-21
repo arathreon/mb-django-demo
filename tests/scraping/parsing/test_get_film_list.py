@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from csfdtop.scraping import get_film_list
+from csfdtop.scraping.parsing import get_film_list
 
 
 def test_get_film_list_found():

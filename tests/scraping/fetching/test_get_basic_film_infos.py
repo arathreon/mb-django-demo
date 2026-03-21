@@ -1,24 +1,21 @@
 from unittest.mock import Mock, patch
 from collections import deque
-from csfdtop.scraping import get_basic_film_infos, BasicFilmInfo
+from csfdtop.scraping.parsing import BasicFilmInfo
+from csfdtop.scraping.fetching import get_basic_film_infos
 
 
-@patch("csfdtop.scraping.process_toplist_url")
-@patch("csfdtop.scraping.get_pagination")
-def test_get_basic_film_infos_single_page(
-    mock_get_pagination, mock_process_toplist_url
-):
+@patch("csfdtop.scraping.fetching.process_toplist_url")
+@patch("csfdtop.scraping.fetching.get_pagination")
+def test_get_basic_film_infos_single_page(mock_get_pagination, mock_process_toplist_url):
     # Setup
     mock_session = Mock()
     total_count = 10
     domain = "http://test.com"
     part = "/top"
 
-    # Mock process_toplist_url to return full count immediately
+    # Mock process_toplist_url to return the full count immediately
     # Returns: current_film_count, basic_film_infos, soup
-    found_films = deque(
-        [BasicFilmInfo(f"Film {i}", 2000 + i, f"/f{i}") for i in range(10)]
-    )
+    found_films = deque([BasicFilmInfo(i, f"Film {i}", 2000 + i, f"/film/{i}-film-{i}") for i in range(10)])
     mock_soup = Mock()
     mock_process_toplist_url.return_value = (10, found_films, mock_soup)
 
@@ -31,11 +28,9 @@ def test_get_basic_film_infos_single_page(
     mock_get_pagination.assert_not_called()
 
 
-@patch("csfdtop.scraping.process_toplist_url")
-@patch("csfdtop.scraping.get_pagination")
-def test_get_basic_film_infos_multiple_pages(
-    mock_get_pagination, mock_process_toplist_url
-):
+@patch("csfdtop.scraping.fetching.process_toplist_url")
+@patch("csfdtop.scraping.fetching.get_pagination")
+def test_get_basic_film_infos_multiple_pages(mock_get_pagination, mock_process_toplist_url):
     # Setup
     mock_session = Mock()
     total_count = 20
@@ -43,14 +38,12 @@ def test_get_basic_film_infos_multiple_pages(
     part = "/top"
 
     # First page returns 10 films
-    films_page1 = deque(
-        [BasicFilmInfo(f"Film {i}", 2000 + i, f"/f{i}") for i in range(10)]
-    )
+    films_page1 = deque([BasicFilmInfo(i, f"Film {i}", 2000 + i, f"/film/{i}-film-{i}") for i in range(10)])
     soup_page1 = Mock()
 
     # Second page returns another 10 films
     films_page2 = deque(
-        [BasicFilmInfo(f"Film {i}", 2000 + i, f"/f{i}") for i in range(20)]
+        [BasicFilmInfo(i, f"Film {i}", 2000 + i, f"/film/{i}-film-{i}") for i in range(10)]
     )  # Accumulated
     soup_page2 = Mock()
 
@@ -68,17 +61,18 @@ def test_get_basic_film_infos_multiple_pages(
     result = get_basic_film_infos(mock_session, total_count, domain, part)
 
     assert len(result) == 20
-    assert result == films_page2
+    for i in range(10):
+        assert result[i] == films_page1[i]
+    for i in range(10):
+        assert result[10 + i] == films_page2[i]
 
     assert mock_process_toplist_url.call_count == 2
-    mock_get_pagination.assert_called_once_with(soup_page1)
+    mock_get_pagination.assert_called_once_with(soup_page1, "/top")
 
 
-@patch("csfdtop.scraping.process_toplist_url")
-@patch("csfdtop.scraping.get_pagination")
-def test_get_basic_film_infos_pagination_loop_break(
-    mock_get_pagination, mock_process_toplist_url
-):
+@patch("csfdtop.scraping.fetching.process_toplist_url")
+@patch("csfdtop.scraping.fetching.get_pagination")
+def test_get_basic_film_infos_pagination_loop_break(mock_get_pagination, mock_process_toplist_url):
     # Test that loop breaks when total_count reached
     mock_session = Mock()
     total_count = 15
@@ -90,7 +84,7 @@ def test_get_basic_film_infos_pagination_loop_break(
 
     # Page 2: 15 films found in total (reached target of 15)
     # We create a specific object here to verify it is returned exactly
-    films2 = deque([Mock() for _ in range(15)])
+    films2 = deque([Mock() for _ in range(5)])
 
     mock_process_toplist_url.side_effect = [
         (10, films1, Mock()),  # First iteration
@@ -110,5 +104,8 @@ def test_get_basic_film_infos_pagination_loop_break(
     assert mock_process_toplist_url.call_count == 2
 
     # 2. Assert the function returned the correct accumulated data from the last step
-    assert result == films2
     assert len(result) == 15
+    for i in range(10):
+        assert result[i] == films1[i]
+    for i in range(5):
+        assert result[10 + i] == films2[i]
