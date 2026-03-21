@@ -19,15 +19,15 @@ def save_results(results: list[tuple[BasicFilmInfo, list[ActorInfo]] | None]):
         logger.info("No films found with actors")
         return
 
-    all_actor_infos = {actor for _, actor_infos in clean_results for actor in actor_infos}
-    existing_actors = get_existing_actors(all_actor_infos)
-    new_actors = all_actor_infos - existing_actors
+    all_actor_infos = {actor.csfd_id: actor for _, actor_infos in clean_results for actor in actor_infos}
+    existing_actors = get_existing_actors(all_actor_infos.values())
+    new_actors = {actor_object for actor_id, actor_object in all_actor_infos.items() if actor_id not in existing_actors}
 
     with transaction.atomic():
         Actor.objects.bulk_create([create_actor_and_add_normalized_name(actor_info) for actor_info in new_actors])
-        actor_map = Actor.objects.filter(csfd_id__in=[actor_info.csfd_id for actor_info in all_actor_infos]).in_bulk(
-            field_name="csfd_id"
-        )
+        actor_map = Actor.objects.filter(
+            csfd_id__in=[actor_info.csfd_id for actor_info in all_actor_infos.values()]
+        ).in_bulk(field_name="csfd_id")
 
         Film.objects.bulk_create([create_film_and_add_normalized_name(film_info) for film_info, _ in clean_results])
         film_map = Film.objects.filter(csfd_id__in=[film_info.csfd_id for film_info, _ in clean_results]).in_bulk(
@@ -69,12 +69,12 @@ def create_film_and_add_normalized_name(basic_film_info: BasicFilmInfo) -> Film:
     return film
 
 
-def get_existing_actors(actor_infos: Iterable[ActorInfo]) -> set[ActorInfo]:
+def get_existing_actors(actor_infos: Iterable[ActorInfo]) -> set[int]:
     """Return actors existing in the database based on the passed actors"""
     existing_actors = {
-        ActorInfo(csfd_id, name)
-        for csfd_id, name in Actor.objects.filter(
-            csfd_id__in=(actor_info.csfd_id for actor_info in actor_infos)
-        ).values_list("csfd_id", "name")
+        csfd_id
+        for csfd_id in Actor.objects.filter(csfd_id__in=(actor_info.csfd_id for actor_info in actor_infos)).values_list(
+            "csfd_id", flat=True
+        )
     }
     return existing_actors

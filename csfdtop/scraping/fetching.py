@@ -123,7 +123,17 @@ async def fetch_film_actors(
                 logger.info("Film %s does not have any actors", film.name)
                 # Films may not have actors, and that results in the section not being there (e.g. Krteček)
                 return film, []
-            actor_elements = heading_element.find_parent("div").find_all("a")
+
+            parent_div = heading_element.find_parent("div")
+            if parent_div is None:
+                logger.error(
+                    "Unexpected DOM structure while fetching film actors for '%s': "
+                    "could not find parent div for actors heading.",
+                    film.name,
+                )
+                return None
+            actor_elements = parent_div.find_all("a")
+
             actors = [
                 process_actor_element(actor_element)
                 for actor_element in actor_elements
